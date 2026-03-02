@@ -6,12 +6,14 @@ import ipaddress
 
 log_file = "sample-logs/auth.log"
 fieldnames = ["timestamp", "hostname", "service", "pid", "event_type",
-                "user_validity", "username", "source_ip", "source_port", "protocol", "message"]
+                "user_validity", "username", "source_ip", "source_port", "protocol", "message",
+                    "logname", "uid", "euid", "tty", "ruser", "rhost", "target_user", "command", "pwd"]
+
 regex_timestamp = re.compile(r"^[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}")
 header_pattern = re.compile(
         r"^(?P<timestamp>[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+"
         r"(?P<hostname>\S+)\s+"
-        r"(?P<service>\w+)\[(?P<pid>\d+)\]:\s+"
+        r"(?P<service>[\w.-]+)(?:\[(?P<pid>\d+)\])?:\s+"
         r"(?P<message>.+)$"
 )
 ssh_message_pattern = re.compile(
@@ -21,6 +23,25 @@ ssh_message_pattern = re.compile(
         r"from (?P<source_ip>\d+\.\d+\.\d+\.\d+) " # IPv4
         r"port (?P<source_port>\d+) " # port
         r"(?P<protocol>\S+)$" # protocol, usually ssh2
+)
+
+sudo_message_pattern = re.compile(
+    r"^pam_unix\(sudo:auth\): authentication failure; "
+    r"logname=(?P<logname>\S*) "
+    r"uid=(?P<uid>\d+) "
+    r"euid=(?P<euid>\d+) "
+    r"tty=(?P<tty>\S+) "
+    r"ruser=(?P<ruser>\S*) "
+    r"rhost=(?P<rhost>\S*) "
+    r"user=(?P<user>\S+)$"
+)
+
+sudo_command_pattern = re.compile(
+    r"^(?P<username>\S+)\s*:\s*"
+    r"TTY=(?P<tty>[^;]+)\s*;\s*"
+    r"PWD=(?P<pwd>[^;]+)\s*;\s*"
+    r"USER=(?P<target_user>[^;]+)\s*;\s*"
+    r"COMMAND=(?P<command>.+)$"
 )
 
 # MAIN FUNCTION
@@ -44,7 +65,13 @@ def main():
                 lines_skipped += 1
                 continue
 
-            parsed_message = parse_message_ssh(parsed_header["message"])
+            if parsed_header["service"] == "sshd":
+                parsed_message = parse_message_ssh(parsed_header["message"])
+            elif parsed_header["service"] == "sudo":
+                parsed_message = parse_message_sudo(parsed_header["message"])
+            else:
+                parsed_message = None
+
             if parsed_message is None:
                 lines_skipped += 1
                 continue
@@ -94,6 +121,42 @@ def parse_message_ssh(str_message):
         "source_port": match.group("source_port"),
         "protocol": match.group("protocol"),
     }
+
+def parse_message_sudo(str_message):
+
+    match = sudo_message_pattern.match(str_message)
+    if match:
+       return {
+        "event_type": "authentication_failure",
+        "username": match.group("user"),
+        "logname": match.group("logname"),
+        "uid": match.group("uid"),
+        "euid": match.group("euid"),
+        "tty": match.group("tty"),
+        "ruser": match.group("ruser"),
+        "rhost": match.group("rhost"),
+        "target_user": None,
+        "command": None,
+        "pwd": None,
+    }
+
+    match = sudo_command_pattern.match(str_message)
+    if match:
+        return {
+        "event_type": "command_executed",
+        "username": match.group("username"),
+        "logname": None,
+        "uid": None,
+        "euid": None,
+        "tty": match.group("tty").strip(),
+        "ruser": None,
+        "rhost": None,
+        "target_user": match.group("target_user").strip(),
+        "command": match.group("command").strip(),
+        "pwd": match.group("pwd").strip(),
+    }
+
+    return None
 
 if __name__ == "__main__":
     main()

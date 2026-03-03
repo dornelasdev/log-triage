@@ -20,7 +20,7 @@ ssh_message_pattern = re.compile(
         r"^(?P<event_type>Accepted|Failed) password for " # captures if "Accepted" or "Failed"
         r"(?:(?P<user_validity>invalid) user )?" # "invalid user", group user_validity
         r"(?P<username>\S+) " # username
-        r"from (?P<source_ip>\d+\.\d+\.\d+\.\d+) " # IPv4
+        r"from (?P<source_ip>\S+) " # IPv4
         r"port (?P<source_port>\d+) " # port
         r"(?P<protocol>\S+)$" # protocol, usually ssh2
 )
@@ -42,6 +42,10 @@ sudo_command_pattern = re.compile(
     r"PWD=(?P<pwd>[^;]+)\s*;\s*"
     r"USER=(?P<target_user>[^;]+)\s*;\s*"
     r"COMMAND=(?P<command>.+)$"
+)
+
+cron_message_pattern = re.compile(
+    r"^\((?P<username>[^)]+)\)\s(?P<cron_action>CMD|START)\s+\((?P<command>.+)\)$"
 )
 
 # MAIN FUNCTION
@@ -69,6 +73,8 @@ def main():
                 parsed_message = parse_message_ssh(parsed_header["message"])
             elif parsed_header["service"] == "sudo":
                 parsed_message = parse_message_sudo(parsed_header["message"])
+            elif parsed_header ["service"] in ("CRON", "cron", "crond"):
+                parsed_message = parse_message_cron(parsed_header["message"])
             else:
                 parsed_message = None
 
@@ -112,6 +118,11 @@ def parse_message_ssh(str_message):
         return None
 
     user_validity = match.group("user_validity") or "valid"
+
+    try:
+        ipaddress.ip_address(match.group("source_ip"))
+    except ValueError:
+        return None
 
     return {
         "event_type": match.group("event_type"),
@@ -157,6 +168,29 @@ def parse_message_sudo(str_message):
     }
 
     return None
+
+def parse_message_cron(str_message):
+
+    match = cron_message_pattern.match(str_message)
+    if not match:
+        return None
+
+    action = match.group("cron_action")
+    event_type = "cron_command" if action == "CMD" else "cron_start"
+
+    return {
+        "event_type": event_type,
+        "username": match.group("username"),
+        "logname": None,
+        "uid": None,
+        "euid": None,
+        "tty": None,
+        "ruser": None,
+        "rhost": None,
+        "target_user": None,
+        "command": match.group("command").strip(),
+        "pwd": None,
+    }
 
 if __name__ == "__main__":
     main()

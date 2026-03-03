@@ -1,3 +1,7 @@
+Jan 10 07:15:01 server CRON[24567]: (root) CMD (/usr/local/bin/backup.sh)
+Jan 10 07:16:01 server CRON[24568]: (root) START (/usr/local/bin/backup.sh)
+Jan 10 05:10:12 server sudo: pam_unix(sudo:auth): authentication failure; logname=user1 uid=1000 euid=0 tty=/dev/pts/0 ruser=user1 rhost= user=user1
+Jan 10 06:22:11 server sudo: user1 : TTY=/dev/pts/0 ; PWD=/home/user1 ; USER=root ; COMMAND=/usr/bin/apt update
 Jan 10 02:14:22 server sshd[1026]: Failed password for invalid user user1 from 10.0.0.5 port 58765 ssh2
 Jan 10 02:15:16 server sshd[1014]: Failed password for invalid user user1 from 10.0.0.5 port 60045 ssh2
 Jan 10 02:15:58 server sshd[1121]: Failed password for invalid user user1 from 10.0.0.5 port 59192 ssh2
@@ -13,4 +17,4 @@ Jan 10 04:13:51 server sshd[997]: Failed password for invalid user user2 from 10
 Jan 10 04:15:03 server sshd[1050]: Failed password for invalid user user2 from 10.0.0.34 port 56923 ssh2
 Jan 10 04:14:20 server sshd[1010]: Failed password for invalid user user2 from 10.0.0.34 port 60120 ssh2
 Jan 10 04:15:50 server sshd[1123]: Failed password for invalid user user2 from 10.0.0.34 port 59231 ssh2
-Jan 10 04:19:06 server sshd[1212]: Accepted password for user2 from 10.0.0.34 port 60004 ssh2
+Jan 10 04:19:06 server sshd[1212]: Accepted password for user2 from 2001:db8:85a3::8a2e:370:7334 port 60004 ssh2

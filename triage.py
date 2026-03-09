@@ -11,6 +11,7 @@ log_file = "sample-logs/auth.log"
 fieldnames = ["timestamp", "iso_timestamp", "hostname", "service", "pid", "event_type",
                 "user_validity", "username", "source_ip", "source_port", "protocol", "message",
                     "logname", "uid", "euid", "tty", "ruser", "rhost", "target_user", "command", "pwd"]
+
 RESET = "\033[0m"
 BOLD = "\033[1m"
 GREEN = "\033[32m"
@@ -20,6 +21,7 @@ CYAN = "\033[36m"
 def main():
     args = get_args()
 
+    unparsed_events = []
     events = []
     lines_skipped = 0
 
@@ -30,18 +32,32 @@ def main():
                 continue
 
             if not regex_timestamp.match(line):
+                unparsed_events.append({
+                    "line": line,
+                    "reason": "invalid_timestamp",
+                    "service_guess": None
+                })
                 lines_skipped += 1
-                print("Skipped line:", repr(line))
                 continue
 
             parsed_header = parse_log_line(line)
             if parsed_header is None:
+                unparsed_events.append({
+                    "line": line,
+                    "reason": "header_no_match",
+                    "service_guess": None,
+                })
                 lines_skipped += 1
                 continue
 
             parsed_message = parse_message_by_service(parsed_header["service"], parsed_header["message"], args.type)
 
             if parsed_message is None:
+                unparsed_events.append({
+                    "line": line,
+                    "reason": "message_no_match",
+                    "service_guess": parsed_header["service"]
+                })
                 lines_skipped += 1
                 continue
 
@@ -59,6 +75,14 @@ def main():
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(events)
+    if unparsed_events:
+        with open("outputs/unparsed_events.json", "w") as f:
+            json.dump(unparsed_events, f, indent=4)
+
+        with open("outputs/unparsed_events.csv", "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["line", "reason", "service_guess"])
+            writer.writeheader()
+            writer.writerows(unparsed_events)
 
     summary(events, lines_skipped)
 

@@ -1,6 +1,7 @@
 import csv
 import json
 import argparse
+from pathlib import Path
 from collections import Counter
 from parsers.header import parse_log_line, regex_timestamp
 from parsers.ssh import parse_message_ssh
@@ -18,8 +19,11 @@ GREEN = "\033[32m"
 YELLOW = "\033[33m"
 CYAN = "\033[36m"
 
+OUTPUT_DIR = Path("outputs")
+
 def main():
     args = get_args()
+    write_json, write_csv = get_output(args)
 
     unparsed_events = []
     events = []
@@ -65,21 +69,25 @@ def main():
 
             events.append(event)
 
-    write_json, write_csv = get_output(args)
+    should_write_outputs = write_json or write_csv or bool(unparsed_events)
+
+    if should_write_outputs:
+        OUTPUT_DIR.mkdir(exist_ok=True)
+
     if write_json:
-        with open("outputs/parsed_events.json", "w") as json_file:
+        with open(OUTPUT_DIR / "parsed_events.json", "w") as json_file:
             json.dump(events, json_file, indent=4)
 
     if write_csv:
-        with open("outputs/parsed_events.csv", "w", newline="") as csv_file:
+        with open(OUTPUT_DIR / "parsed_events.csv", "w", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(events)
     if unparsed_events:
-        with open("outputs/unparsed_events.json", "w") as f:
+        with open(OUTPUT_DIR / "unparsed_events.json", "w") as f:
             json.dump(unparsed_events, f, indent=4)
 
-        with open("outputs/unparsed_events.csv", "w", newline="") as f:
+        with open(OUTPUT_DIR / "unparsed_events.csv", "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["line", "reason", "service_guess"])
             writer.writeheader()
             writer.writerows(unparsed_events)

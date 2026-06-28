@@ -1,0 +1,25 @@
+FIELDNAMES = [
+    "timestamp",
+    "iso_timestamp",
+    "hostname",
+    "service",
+    "pid",
+    "event_type",
+    "user_validity",
+    "username",
+    "source_ip",
+    "source_port",
+    "protocol",
+    "message",
+    "logname",
+    "uid",
+    "euid",
+    "tty",
+    "ruser",
+    "rhost",
+    "target_user",
+    "command",
+    "pwd",
+]
+
+UNPARSED_FIELDNAMES = ["line", "reason", "service_guess"]

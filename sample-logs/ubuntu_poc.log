@@ -1,0 +1,9 @@
+Jun 27 13:51:07 ubuntu-vm sshd[5354]: Failed password for analyst from 203.0.113.10 port 61827 ssh2
+Jun 27 13:51:25 ubuntu-vm sshd[5354]: Failed password for analyst from 203.0.113.10 port 61827 ssh2
+Jun 27 13:51:25 ubuntu-vm sshd[5354]: Connection closed by authenticating user analyst 203.0.113.10 port 61827 [preauth]
+Jun 27 13:51:25 ubuntu-vm sshd[5354]: PAM 2 more authentication failures; logname= uid=0 euid=0 tty=ssh ruser= rhost=203.0.113.10  user=analyst
+Jun 27 13:51:55 ubuntu-vm sshd[5366]: Accepted password for analyst from 203.0.113.10 port 61840 ssh2
+Jun 27 13:51:55 ubuntu-vm sshd[5366]: pam_unix(sshd:session): session opened for user analyst(uid=1000) by analyst(uid=0)
+2026-06-27T13:55:01.394782+01:00 ubuntu-vm CRON[5933]: (analyst) CMD (/usr/bin/echo "log-triage-test")
+2026-06-27T13:56:01.419590+01:00 ubuntu-vm CRON[5964]: (analyst) CMD (/usr/bin/echo "log-triage-test")
+2026-06-27T13:55:12.474130+01:00 ubuntu-vm sudo: analyst : TTY=pts/0 ; PWD=/home/analyst ; USER=root ; COMMAND=/usr/bin/tail -f /var/log/auth.log

@@ -15,6 +15,7 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
   - `cron` / `crond` / `CRON`
 - SSH parsing:
   - `Accepted` and `Failed` events.
+  - `ssh_session_opened` events.
   - user validity (`valid` / `invalid`)
   - IP extraction and validation with `ipaddress` (IPv4 + IPv6)
 - Sudo parsing:
@@ -23,34 +24,57 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
 - Cron parsing:
   - `CMD` and `START`
 - Timestamp normalization:
-  - keeps original `timestamp` and adds `iso_timestamp` from Europe/Lisbon timezone.
+  - supports legacy syslog timestamps and ISO timestamps with timezone offsets.
+  - keeps original `timestamp` and adds `iso_timestamp`.
 - Output formats:
   - `-o csv`
   - `-o json`
+  - `-o both`
+  - `-i/--input` for selecting a log file
   - If no flag is provided, prompts in terminal: `json/csv/both`.
+- Unparsed event reporting:
+  - `invalid_timestamp`
+  - `header_no_match`
+  - `service_filtered_by_type`
+  - `unknown_service`
+  - `message_no_match`
 
 
 ## Project Structure
 
 - `triage.py`
-  Main entry point for file reading, routing, skipped-line counter, and output generation.
-- `parsers/header.py`
+  Command-line entry point.
+- `logtriage/cli.py`
+  CLI argument parsing and output selection.
+- `logtriage/pipeline.py`
+  Main parsing workflow.
+- `logtriage/router.py`
+  Service-based message routing.
+- `logtriage/schema.py`
+  Output field definitions.
+- `logtriage/writers.py`
+  JSON/CSV output generation.
+- `logtriage/summary.py`
+  Terminal summary output.
+- `logtriage/parsers/header.py`
   Header parsing + timestamp normalization.
-- `parsers/ssh.py`
+- `logtriage/parsers/ssh.py`
   SSH message parser and regex.
-- `parsers/sudo.py`
+- `logtriage/parsers/sudo.py`
   Sudo auth-failure and command parser.
-- `parsers/cron.py`
+- `logtriage/parsers/cron.py`
   Cron message parser.
 - `sample-logs/`
-  Input samples.
+  Input samples, including a sanitized Ubuntu PoC log.
 - `outputs/`
-  Generated files.
+  Generated files created at runtime.
+- `docs/`
+  Examples, parser coverage, and manual validation notes.
 
 
 ## How It Works
 
-1. Read each line from `log_file`.
+1. Read each line from the selected input file.
 2. Validate basic timestamp format.
 3. Parse header.
 4. Route message parsing by `service`.
@@ -67,6 +91,8 @@ python3 triage.py -o json
 python3 triage.py -o csv
 python3 triage.py -o both
 python3 triage.py -t sshd -o json
+python3 triage.py -i sample-logs/auth.log -t all -o both
+python3 triage.py -i sample-logs/ubuntu_poc.log -t all -o both
 ```
 
 Without flags:
@@ -79,6 +105,24 @@ The program will prompt:
 
 ```text
 Output format? [json/csv/both]:
+```
+
+For runnable examples, see [docs/examples.md](docs/examples.md).
+For supported and unsupported parser patterns, see [docs/parser-coverage.md](docs/parser-coverage.md).
+For manual validation notes, see [docs/test-runs.md](docs/test-runs.md).
+
+## Testing
+
+Install development dependencies inside a virtual environment:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
+Run the automated test suite:
+
+```bash
+python -m pytest
 ```
 
 ## Output Schema
@@ -105,7 +149,6 @@ Non-applicable fields remain empty in CSV / `null` in JSON.
 - Add optional summary export (summary.json) in addition to terminal summary.
 
 ## Known Limitations
-- Input path is still hardcoded.
 - Parsing currently focuses on specific message formats per service.
 - Unsupported formats are skipped and counted in `lines_skipped`.
 

@@ -47,8 +47,8 @@ Expected behavior:
 
 Expected summary:
 ```text
-Total events parsed: 6
-Lines skipped: 3
+Total events parsed: 7
+Lines skipped: 2
 ```
 
 ## Service Filtering
@@ -83,6 +83,22 @@ Generate both:
 ```bash
 python3 triage.py -i sample-logs/auth.log -t all -o both
 ```
+
+## SSH Brute-Force Detection
+
+The default rule detects 5 failed SSH authentications from one source IP within 60 seconds:
+
+```bash
+python3 triage.py -i sample-logs/auth.log -o json --export-summary
+```
+
+Threshold and window values can be adjusted. This command detects the two close SSH failures in the Ubuntu PoC sample:
+
+```bash
+python3 triage.py -i sample-logs/ubuntu_poc.log -o json --ssh-threshold 2 --ssh-window 30 --export-summary
+```
+
+Detection results always appear in the terminal summary. With `--export-summary`, the full report is also written to `outputs/summary.json`.
 
 ## Unparsed Events
 

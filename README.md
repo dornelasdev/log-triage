@@ -38,6 +38,12 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
   - `service_filtered_by_type`
   - `unknown_service`
   - `message_no_match`
+- Rule-based SSH brute-force detection:
+  - groups failed authentications by source IP.
+  - detects the strongest time window for each IPv4 or IPv6 source.
+  - defaults to 5 failures within 60 seconds.
+  - supports configurable thresholds and time windows.
+- Optional `summary.json` export with parsing totals, event breakdowns, detection settings, and alerts.
 
 
 ## Project Structure
@@ -55,7 +61,9 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
 - `logtriage/writers.py`
   JSON/CSV output generation.
 - `logtriage/summary.py`
-  Terminal summary output.
+  Summary report construction and terminal output.
+- `logtriage/detection.py`
+  Rule-based SSH brute-force detection.
 - `logtriage/parsers/header.py`
   Header parsing + timestamp normalization.
 - `logtriage/parsers/ssh.py`
@@ -79,7 +87,9 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
 3. Parse header.
 4. Route message parsing by `service`.
 5. Merge header + parsed message into a unified event object.
-6. Export events as CSV, JSON, or both.
+6. Evaluate parsed SSH failures against the configured detection rule.
+7. Export events as CSV, JSON, or both.
+8. Optionally export the summary and detections to `outputs/summary.json`.
 
 
 ### Usage
@@ -93,6 +103,8 @@ python3 triage.py -o both
 python3 triage.py -t sshd -o json
 python3 triage.py -i sample-logs/auth.log -t all -o both
 python3 triage.py -i sample-logs/ubuntu_poc.log -t all -o both
+python3 triage.py -i sample-logs/auth.log -o json --export-summary
+python3 triage.py -i sample-logs/ubuntu_poc.log -o json --ssh-threshold 2 --ssh-window 30 --export-summary
 ```
 
 Without flags:
@@ -143,14 +155,21 @@ Additional fields are filled when available (for example, SSH network fields or 
 
 Non-applicable fields remain empty in CSV / `null` in JSON.
 
+The optional `outputs/summary.json` report contains:
+- parsed and skipped totals
+- counts by service and event type
+- SSH detection configuration
+- rule-based detection results
+
 ### Roadmap (Short-Term)
 
-- Add rule-based SSH brute-force detection (failures per IP within a time window).
-- Add optional summary export (summary.json) in addition to terminal summary.
+- Expand detection rules beyond SSH brute-force activity.
+- Add configurable output paths and detection profiles.
 
 ## Known Limitations
 - Parsing currently focuses on specific message formats per service.
 - Unsupported formats are skipped and counted in `lines_skipped`.
+- SSH brute-force detection reports one strongest qualifying window per source IP and parser run.
 
 #### Disclaimer
 

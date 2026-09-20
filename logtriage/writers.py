@@ -28,3 +28,9 @@ def write_outputs(events, unparsed_events, write_json, write_csv):
             writer = csv.DictWriter(f, fieldnames=UNPARSED_FIELDNAMES)
             writer.writeheader()
             writer.writerows(unparsed_events)
+
+
+def write_summary(report):
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    with open(OUTPUT_DIR / "summary.json", "w") as summary_file:
+        json.dump(report, summary_file, indent=4)

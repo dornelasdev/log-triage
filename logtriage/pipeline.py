@@ -1,8 +1,9 @@
 from logtriage.cli import get_output
+from logtriage.detection import detect_ssh_brute_force
 from logtriage.parsers.header import parse_log_line, regex_timestamp
 from logtriage.router import route_message
-from logtriage.summary import summary
-from logtriage.writers import write_outputs
+from logtriage.summary import build_summary, print_summary
+from logtriage.writers import write_outputs, write_summary
 
 
 def run_pipeline(args):
@@ -55,5 +56,22 @@ def run_pipeline(args):
             event = {**parsed_header, **parsed_message}
             events.append(event)
 
+    detections = detect_ssh_brute_force(
+        events,
+        threshold=args.ssh_threshold,
+        window_seconds=args.ssh_window,
+    )
+    report = build_summary(
+        events,
+        lines_skipped,
+        detections,
+        input_file=args.input,
+        selected_type=args.type,
+        ssh_threshold=args.ssh_threshold,
+        ssh_window=args.ssh_window,
+    )
+
     write_outputs(events, unparsed_events, write_json, write_csv)
-    summary(events, lines_skipped)
+    if args.export_summary:
+        write_summary(report)
+    print_summary(report)

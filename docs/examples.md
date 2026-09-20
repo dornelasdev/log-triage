@@ -15,7 +15,7 @@ Clean mixed auth log used as the default input sample.
 Command:
 
 ```bash
-python3 triage.py -i sample-logs/auth.log -t all -o both
+uv run python triage.py -i sample-logs/auth.log -t all -o both
 ```
 
 Expected behavior:
@@ -36,7 +36,7 @@ Sanitized logs generated from an Ubuntu VM. This sample includes both supported 
 Command:
 
 ```bash
-python3 triage.py -i sample-logs/ubuntu_poc.log -t all -o both
+uv run python triage.py -i sample-logs/ubuntu_poc.log -t all -o both
 ```
 
 Expected behavior:
@@ -56,7 +56,7 @@ Lines skipped: 2
 Parse only SSH events:
 
 ```bash
-python3 triage.py -i sample-logs/ubuntu_poc.log -t sshd -o json
+uv run python triage.py -i sample-logs/ubuntu_poc.log -t sshd -o json
 ```
 
 Expected behavior:
@@ -69,19 +69,19 @@ Expected behavior:
 Generate only CSV:
 
 ```bash
-python3 triage.py -i sample-logs/auth.log -t all -o csv
+uv run python triage.py -i sample-logs/auth.log -t all -o csv
 ```
 
 Generate only JSON:
 
 ```bash
-python3 triage.py -i sample-logs/auth.log -t all -o json
+uv run python triage.py -i sample-logs/auth.log -t all -o json
 ```
 
 Generate both:
 
 ```bash
-python3 triage.py -i sample-logs/auth.log -t all -o both
+uv run python triage.py -i sample-logs/auth.log -t all -o both
 ```
 
 ## SSH Brute-Force Detection
@@ -89,13 +89,13 @@ python3 triage.py -i sample-logs/auth.log -t all -o both
 The default rule detects 5 failed SSH authentications from one source IP within 60 seconds:
 
 ```bash
-python3 triage.py -i sample-logs/auth.log -o json --export-summary
+uv run python triage.py -i sample-logs/auth.log -o json --export-summary
 ```
 
 Threshold and window values can be adjusted. This command detects the two close SSH failures in the Ubuntu PoC sample:
 
 ```bash
-python3 triage.py -i sample-logs/ubuntu_poc.log -o json --ssh-threshold 2 --ssh-window 30 --export-summary
+uv run python triage.py -i sample-logs/ubuntu_poc.log -o json --ssh-threshold 2 --ssh-window 30 --export-summary
 ```
 
 Detection results always appear in the terminal summary. With `--export-summary`, the full report is also written to `outputs/summary.json`.

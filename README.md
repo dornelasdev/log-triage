@@ -50,6 +50,10 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
 
 - `triage.py`
   Command-line entry point.
+- `pyproject.toml`
+  Project metadata and dependency declarations managed with `uv`.
+- `uv.lock`
+  Exact, reproducible development dependency versions.
 - `logtriage/cli.py`
   CLI argument parsing and output selection.
 - `logtriage/pipeline.py`
@@ -92,25 +96,33 @@ It reads Linux-style auth logs, parses supported services, and exports normalize
 8. Optionally export the summary and detections to `outputs/summary.json`.
 
 
-### Usage
+## Setup
+
+Install `uv`, then create the project environment and install its locked dependencies:
+
+```bash
+uv sync
+```
+
+## Usage
 
 From project root:
 
 ```bash
-python3 triage.py -o json
-python3 triage.py -o csv
-python3 triage.py -o both
-python3 triage.py -t sshd -o json
-python3 triage.py -i sample-logs/auth.log -t all -o both
-python3 triage.py -i sample-logs/ubuntu_poc.log -t all -o both
-python3 triage.py -i sample-logs/auth.log -o json --export-summary
-python3 triage.py -i sample-logs/ubuntu_poc.log -o json --ssh-threshold 2 --ssh-window 30 --export-summary
+uv run python triage.py -o json
+uv run python triage.py -o csv
+uv run python triage.py -o both
+uv run python triage.py -t sshd -o json
+uv run python triage.py -i sample-logs/auth.log -t all -o both
+uv run python triage.py -i sample-logs/ubuntu_poc.log -t all -o both
+uv run python triage.py -i sample-logs/auth.log -o json --export-summary
+uv run python triage.py -i sample-logs/ubuntu_poc.log -o json --ssh-threshold 2 --ssh-window 30 --export-summary
 ```
 
 Without flags:
 
 ```bash
-python3 triage.py
+uv run python triage.py
 ```
 
 The program will prompt:
@@ -125,16 +137,10 @@ For manual validation notes, see [docs/test-runs.md](docs/test-runs.md).
 
 ## Testing
 
-Install development dependencies inside a virtual environment:
-
-```bash
-python -m pip install -r requirements-dev.txt
-```
-
 Run the automated test suite:
 
 ```bash
-python -m pytest
+uv run pytest
 ```
 
 ## Output Schema
